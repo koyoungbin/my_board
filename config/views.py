@@ -1,81 +1,91 @@
 from django.shortcuts import render
-import ftplib
 import serial
-import time
-import datetime
+import ftplib
 import pandas as pd
-import os
-import urllib.request
-import threading
 
 
 def main(request):
     return render(request, "main.html")
 
 
-def burger_list(request):
-    return render(request, "burger_list.html")
+def Previous_data(request):
+    return render(request, "Previous_data.html")
 
+
+# def index(request):
+#     py_serial = serial.Serial('COM4', 9600)
+#
+#     while not False:
+#         if py_serial.readable():
+#             response = py_serial.readline()
+#             response2 = response[:len(response) - 1].decode()
+#             response3 = int(response2)
+#             ser_data = response3
+#
+#             int_data = 150
+#
+#             return render(request, 'index.html', {'data': ser_data})
 
 def index(request):
-    py_serial = serial.Serial('COM4', 9600)
-    stop_flag = False
-    global response3
+    while not False:
+        ftp = ftplib.FTP(host='172.18.99.188')
+        ftp.set_pasv(False)
+        ftp.login(user='JMK', passwd='wjdals123!')
+        ftp.cwd('All_user/JMK/aqua_farm')
+        # ftp.retrlines('LIST')
+        with open(file=r'C:/Users/KoYoungBin/Desktop/test2file/myname4.csv',
+                  mode='wb') as rf:  # storline은 업로드고 이것은 다운로드다 나스의 myname을
+            ftp.retrbinary('RETR data_atlas_2023-09-03.csv', rf.write)  # testfile 에 myname4라는 이름으로 다운로드하는것이다
 
-    while not stop_flag:
-        if py_serial.readable():
-            response = py_serial.readline()
-            response2 = response[:len(response) - 1].decode()
-            response3 = int(response2)
-            name = response3
-            return render(request, 'hihi.html', {'name': name})
+        first_data = pd.read_csv('C:/Users/KoYoungBin/Desktop/test2file/myname4.csv')
 
+        time_data = first_data['time'][0]
+        temperature_data = first_data['temperature'][0]
+        do_data = first_data['DO'][3]
+        ec_data = first_data['EC'][0]
+
+        print(do_data)
+
+        return render(request, 'index.html', {'data': do_data})
 
 # def index1(request):
-#     ser2 = serial.Serial('COM4', 9600, timeout=1)
+#     ser2 = serial.Serial('COM4', 9600)  # timeout=1 이거 실행 시키면 그래프가 안 나옴
 #     stop_flag = False
-#     global response3
 #
 #     while not stop_flag:
 #         if ser2.readable():
-#             response = ser2.readline()
-#             response2 = response[:len(response) - 1].decode()
-#             response3 = int(response2)
-#             line = response3
-#             # name = response3
+#             ser2_data = ser2.readline()
+#             ser2_data2 = ser2_data[:len(ser2_data) - 1].decode()
+#             float_data = float(ser2_data2)  # 시리얼 값이고 이값이 return 문에 들어간다
 #
-#         time_array = []
-#         data_array = []
+#             time_array = []
+#             data_array = []
 #
-#         i = 0
-#
-#         while True:
-#
+#             i = 0
 #             print('number :', i)
+#
 #             previous_date = datetime.date.today()
-#
 #             current_time = datetime.datetime.now()
-#             # line = ser2.readline().decode()
-#
-#             data = str(line)
+#             current_date = datetime.date.today()
 #
 #             try:
-#                 data = float(data)
-#                 data_array.append(data)
+#                 data_array.append(float_data)
 #                 time_array.append(str(current_time))
-#                 print(data)
-#                 print(current_time)
-#                 render(request, 'hihi.html', {'name': data})
 #
-#                 time.sleep(300)
+#                 print(float_data)
+#                 print(current_time)
+#
+#                 # time.sleep(300)  # 이거 실행 시키면 그래프가 안 나옴
+#
 #             except ValueError:
 #                 time.sleep(2)
+#
 #             except TypeError:
 #                 time.sleep(2)
+#
 #             except SyntaxError:
 #                 time.sleep(2)
 #
-#             current_date = datetime.date.today()
 #             if previous_date != current_date:
 #                 df = pd.DataFrame(time_array, columns=['time'])
 #                 df['Data'] = data_array
@@ -86,14 +96,17 @@ def index(request):
 #                 data_array.clear()
 #
 #                 time.sleep(2)
+#
 #                 ftp = ftplib.FTP(host='172.18.99.188')
 #                 ftp.set_pasv(False)
 #                 ftp.login(user='JMK', passwd='wjdals123!')
 #                 ftp.cwd('All_user/JMK/aqua_farm')
 #                 ftp.storlines('STOR ' + file_name, open(file_name, 'rb'))
-#                 # ftp_connect(filename=file_name)
 #                 previous_date = current_date
+#
 #                 time.sleep(2)
 #                 os.remove('./' + file_name)
 #                 i = 0
-#             i = i + 1
+#                 i = i + 1
+#
+#             return render(request, 'index.html', {'data': float_data})
